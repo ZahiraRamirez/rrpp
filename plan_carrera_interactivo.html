@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa de Carrera - Zahira</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fefefe;
+      padding: 2rem;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #777;
+    }
+    .materia {
+      padding: 1rem;
+      margin: 0.5rem 0;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .bloqueada {
+      background-color: #f8d7da;
+    }
+    .espera {
+      background-color: #fff3cd;
+    }
+    .habilitada {
+      background-color: #d4edda;
+    }
+    .aprobada {
+      background-color: #d1ecf1;
+    }
+    label {
+      font-weight: 600;
+      flex: 1;
+    }
+    .grupo {
+      margin-top: 2rem;
+    }
+    .grupo h2 {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 0.5rem;
+    }
+    input[type="checkbox"] {
+      transform: scale(1.3);
+    }
+  </style>
+</head>
+<body>
+  <h1>📘 Mapa Interactivo de Carrera</h1>
+
+  <div id="materias"></div>
+
+  <script>
+    const materias = [
+      { codigo: "2700", nombre: "Economía", correlativas: [] },
+      { codigo: "2701", nombre: "Relaciones Públicas I", correlativas: [] },
+      { codigo: "2702", nombre: "Filosofía", correlativas: [] },
+      { codigo: "2703", nombre: "Sociología", correlativas: [] },
+      { codigo: "2704", nombre: "Taller de Integración", correlativas: [] },
+      { codigo: "2705", nombre: "Psicología", correlativas: [] },
+      { codigo: "2706", nombre: "Teoría Social", correlativas: [] },
+      { codigo: "2707", nombre: "Procesos Sociohistóricos Mundiales", correlativas: [] },
+      { codigo: "2708", nombre: "Economía Aplicada", correlativas: ["2700"] },
+      { codigo: "2709", nombre: "Relaciones Públicas II", correlativas: ["2701"] },
+      { codigo: "2710", nombre: "Teoría de la Comunicación I", correlativas: [] },
+      { codigo: "2711", nombre: "Procesos Sociohistóricos Argentinos", correlativas: ["2707"] },
+      { codigo: "2712", nombre: "Administración General", correlativas: ["2708"] },
+      { codigo: "2713", nombre: "Taller de Expresión Corporal", correlativas: [] },
+      { codigo: "2753", nombre: "Taller de Juego y Dramatización", correlativas: [] },
+      { codigo: "2715", nombre: "Dinámica de Grupo", correlativas: ["2710"] },
+      { codigo: "2716", nombre: "Teoría de la Comunicación II", correlativas: ["2710"] },
+      { codigo: "2717", nombre: "Organización y Estructura", correlativas: ["2712"] },
+      { codigo: "2718", nombre: "Publicidad y Estratégias Comunicacionales", correlativas: ["2709", "2710", "2711", "2712"] },
+      { codigo: "2719", nombre: "Semiótica", correlativas: ["2716"] },
+      { codigo: "2720", nombre: "Metodología de la Investigación I", correlativas: [] },
+      { codigo: "2721", nombre: "Administración de Recursos Humanos", correlativas: ["2717"] },
+      { codigo: "2756", nombre: "Comunicación e Imagen Institucional", correlativas: ["2713", "2753", "2717", "2718", "2719"] },
+      { codigo: "2723", nombre: "Psicología Social Institucional", correlativas: ["2715"] },
+      { codigo: "2724", nombre: "Metodología de la Investigación II", correlativas: ["2720"] },
+      { codigo: "2725", nombre: "Marketing", correlativas: ["2721", "2756", "2724"] },
+      { codigo: "2726", nombre: "Taller de Organización de Eventos", correlativas: ["2723"] },
+      { codigo: "2755", nombre: "Taller de Elocución y Oratoria", correlativas: ["2723"] },
+      { codigo: "2728", nombre: "Investigación de Mercado", correlativas: ["2724"] },
+      { codigo: "2757", nombre: "Taller de Elaboración del Trabajo Final", correlativas: ["2725", "2726", "2755", "2728"] },
+      { codigo: "2758", nombre: "Planeamiento de Relaciones Públicas", correlativas: ["2725", "2726", "2755", "2728"] },
+      { codigo: "2731", nombre: "Seminario de Tópicos de Avanzada", correlativas: ["2725"] },
+      { codigo: "2732", nombre: "Relaciones Internacionales", correlativas: ["2725"] },
+      { codigo: "0901", nombre: "Inglés I", correlativas: [] },
+      { codigo: "0902", nombre: "Inglés II", correlativas: ["0901"] },
+      { codigo: "0903", nombre: "Inglés III", correlativas: ["0902"] },
+      { codigo: "0904", nombre: "Inglés IV", correlativas: ["0903"] },
+      { codigo: "0911", nombre: "Computación I", correlativas: [] },
+      { codigo: "0912", nombre: "Computación II", correlativas: ["0911"] },
+    ];
+
+    const contenedor = document.getElementById("materias");
+
+    function renderMaterias() {
+      contenedor.innerHTML = "";
+      materias.forEach((mat) => {
+        const aprobadas = JSON.parse(localStorage.getItem("materiasAprobadas") || "[]");
+        const habilitada = mat.correlativas.every((c) => aprobadas.includes(c));
+        const aprobada = aprobadas.includes(mat.codigo);
+
+        const div = document.createElement("div");
+        div.className = `materia ${aprobada ? "aprobada" : habilitada ? "habilitada" : mat.correlativas.length ? "espera" : "bloqueada"}`;
+
+        const label = document.createElement("label");
+        label.textContent = mat.nombre;
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = aprobada;
+        checkbox.disabled = !habilitada && !aprobada;
+        checkbox.addEventListener("change", () => {
+          let estado = JSON.parse(localStorage.getItem("materiasAprobadas") || "[]");
+          if (checkbox.checked) {
+            estado.push(mat.codigo);
+          } else {
+            estado = estado.filter((c) => c !== mat.codigo);
+          }
+          localStorage.setItem("materiasAprobadas", JSON.stringify(estado));
+          renderMaterias();
+        });
+
+        div.appendChild(label);
+        div.appendChild(checkbox);
+        contenedor.appendChild(div);
+      });
+    }
+
+    renderMaterias();
+  </script>
+</body>
+</html>
